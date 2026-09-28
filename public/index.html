@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#087f72">
+  <meta name="description" content="Aprende el ciclo de vida de un service worker con una demo real de notas sin conexión.">
+  <title>PWA Lab · El poder de seguir offline</title>
+  <!-- El manifest describe cómo se instala y se presenta la aplicación. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="brand"><img src="/icon.svg" width="34" height="34" alt=""><span>PWA<span class="brand-light"> Lab</span></span></a>
+    <span class="header-caption">UN PEQUEÑO LABORATORIO. UNA WEB SIEMPRE DISPONIBLE.</span>
+    <span class="badge" id="connection" role="status">Comprobando conexión</span>
+  </header>
+  <main>
+    <section class="intro">
+      <div class="eyebrow"><span></span> EQUIPO 03 / SERVICE WORKER Y CICLO DE VIDA</div>
+      <h1>La conexión se va.<br><span>Tu app se queda.</span></h1>
+      <p>Descubre cómo una web puede seguir funcionando sin internet.<br class="desktop-break"> Guarda una nota, desconéctate y compruébalo tú mismo.</p>
+      <div class="intro-meta"><span>↳ Demo interactiva</span><span>100% local</span><span>Sin dependencias de ejecución</span></div>
+    </section>
+
+    <nav class="tabs" aria-label="Secciones de la exposición">
+      <button class="tab active" data-view="demo" aria-pressed="true"><span>01</span> Laboratorio</button>
+      <button class="tab" data-view="code" aria-pressed="false"><span>02</span> El código</button>
+      <button class="tab" data-view="guide" aria-pressed="false"><span>03</span> Guía para exponer</button>
+    </nav>
+
+    <section id="view-demo" class="view">
+      <div class="section-heading"><div><h2>Prueba. Desconecta. Recarga.</h2><p>Lo que ves aquí es la caché real de este navegador.</p></div><span class="worker-status"><i id="worker-dot"></i> Service worker: <strong id="worker-state">Preparando…</strong></span></div>
+      <div class="workspace">
+        <article class="card notes-card">
+          <div class="card-heading"><div class="title-with-icon"><span class="tile-icon">✎</span><div><h3>Mis notas offline</h3><p>Una idea que no necesita Wi-Fi.</p></div></div><span class="small-label">DEMO</span></div>
+          <form id="note-form">
+            <label for="note">¿Qué quieres guardar?</label>
+            <textarea id="note" maxlength="500" placeholder="Por ejemplo: el service worker responde desde la caché cuando no hay internet…" required disabled></textarea>
+            <div class="form-bottom"><span id="char-count">0 / 500</span><button class="button primary" id="save-note" disabled>Guardar en caché <span aria-hidden="true">↗</span></button></div>
+          </form>
+          <p class="feedback" id="feedback" role="status">Preparando el service worker…</p>
+          <div class="list-heading"><h4>GUARDADO EN ESTE NAVEGADOR</h4><span id="note-count">0 notas</span></div>
+          <div id="notes"><div class="empty-state"><span>↳</span><p>Tu primera nota empieza arriba.</p><small>Después podrás abrirla incluso sin conexión.</small></div></div>
+          <div class="local-notice"><span aria-hidden="true">ⓘ</span> Las notas se guardan en tu navegador. No se envían a un servidor ni se sincronizan entre pestañas.</div>
+        </article>
+
+        <article class="card cache-card">
+          <div class="card-heading"><div class="title-with-icon"><span class="tile-icon">▤</span><div><h3>Dentro de la caché</h3><p>Cache Storage · datos reales</p></div></div><button id="refresh-cache" class="icon-button" aria-label="Actualizar caché" title="Actualizar caché">↻</button></div>
+          <div class="cache-summary"><div><span id="asset-count">—</span><small>archivos disponibles offline</small></div><span class="cache-chip">CACHE FIRST</span></div>
+          <div class="cache-table-heading"><span>RECURSO</span><span>ESTADO</span></div>
+          <div id="cache-files" class="cache-files"><p class="muted">Esperando la instalación…</p></div>
+          <div class="data-preview"><div><span class="status-dot"></span><strong>pwa-lab-notas-v1</strong></div><p>Respuesta JSON guardada por el service worker.</p><pre id="cached-json">[]</pre></div>
+          <p class="cache-footnote">También puedes verlo en F12 → Application → Cache Storage.</p>
+        </article>
+      </div>
+
+      <div class="offline-callout"><span class="callout-icon">↯</span><div><h3>El momento de la prueba</h3><p>Abre F12 → Network → selecciona <strong>Offline</strong>. Guarda otra nota y recarga normalmente con <strong>Ctrl + R</strong>.</p></div><button class="button secondary" data-go="guide">Ver los pasos <span aria-hidden="true">→</span></button></div>
+      <section class="lifecycle"><div class="section-heading"><div><h2>Un service worker, cuatro momentos.</h2><p>Un intermediario que puede responder sin llegar al servidor.</p></div><span class="small-label">EL CICLO DE VIDA</span></div><div class="lifecycle-grid">
+        <article><span class="step-number">01</span><code>register()</code><h3>Se registra</h3><p>La página le indica al navegador dónde está el worker.</p></article>
+        <article><span class="step-number">02</span><code>install</code><h3>Se prepara</h3><p>Descarga y guarda los archivos básicos en la caché.</p></article>
+        <article><span class="step-number">03</span><code>activate</code><h3>Toma el control</h3><p>Limpia versiones anteriores y controla la página.</p></article>
+        <article><span class="step-number">04</span><code>fetch</code><h3>Responde</h3><p>Intercepta peticiones y elige entre caché y red.</p></article>
+      </div></section>
+    </section>
+
+    <section id="view-code" class="view" hidden>
+      <div class="section-heading"><div><h2>El código, sin cajas negras.</h2><p>Estos son los archivos reales que usa esta aplicación, disponibles también offline.</p></div></div>
+      <div class="code-layout"><aside class="card code-sidebar"><h3>Los archivos clave</h3><button class="file-button selected" data-file="manifest.webmanifest" aria-pressed="true"><span>{ }</span> manifest.webmanifest</button><button class="file-button" data-file="service-worker.js" aria-pressed="false"><span>JS</span> service-worker.js</button><button class="file-button" data-file="register-sw.js" aria-pressed="false"><span>JS</span> register-sw.js</button><div id="code-explanation"></div></aside><article class="code-editor"><div class="editor-bar"><div><i></i><i></i><i></i></div><span id="filename">manifest.webmanifest</span><button id="copy-code">Copiar código</button></div><pre tabindex="0"><code id="source-code">Cargando…</code></pre></article></div>
+    </section>
+
+    <section id="view-guide" class="view" hidden>
+      <div class="section-heading"><div><h2>Tu exposición, paso a paso.</h2><p>Una explicación corta y una demostración que puedes comprobar.</p></div><span class="small-label">APROX. 5 MINUTOS</span></div>
+      <div class="guide-grid"><article class="card guide-card"><span class="eyebrow">01 / EXPLICA LA IDEA</span><h3>¿Qué es un service worker?</h3><p>Es un archivo JavaScript que el navegador ejecuta por separado de la página. No modifica el HTML directamente: escucha eventos y puede interceptar peticiones.</p><blockquote>“Funciona como un intermediario: cuando la página pide un archivo, puede entregarlo desde la caché sin ir al servidor.”</blockquote><div class="flow"><span>Página</span><b>→</b><span>Service worker</span><b>→</b><span>Caché / Red</span></div></article>
+      <article class="card guide-card"><span class="eyebrow">02 / MUESTRA LOS ARCHIVOS</span><h3>Dos piezas, trabajos distintos</h3><p><strong>Manifest:</strong> describe el nombre, los íconos, los colores y cómo se abre la app instalada.</p><p><strong>Service worker:</strong> guarda archivos durante <code>install</code>, limpia cachés anteriores en <code>activate</code> y responde peticiones en <code>fetch</code>.</p><p><strong>Registro:</strong> <code>register-sw.js</code> conecta la página con el worker.</p><button class="text-button" data-go="code">Abrir el código comentado →</button></article>
+      <article class="card guide-card wide"><span class="eyebrow">03 / HAZ LA PRUEBA EN VIVO</span><h3>Sin conexión. Con evidencia.</h3><ol class="demo-steps"><li><strong>Abre la app con conexión.</strong><span>Espera a que diga “Service worker: Activo”. Guarda una nota.</span></li><li><strong>Abre las herramientas del navegador con F12.</strong><span>En Application → Manifest verás el manifest; en Service workers, el worker activo. En Cache Storage, abre las cachés de archivos y notas.</span></li><li><strong>En Network, cambia “No throttling” por “Offline”.</strong><span>Deja abiertas las herramientas. La app mostrará “Sin conexión”. Mantén desmarcado “Bypass for network” en Service workers.</span></li><li><strong>Guarda una nueva nota mientras estás offline.</strong><span>Verás su contenido en el JSON de la caché. Actualiza Cache Storage en DevTools si no aparece al instante.</span></li><li><strong>Recarga con Ctrl + R.</strong><span>La página y tus notas siguen disponibles. En Network puedes inspeccionar las respuestas del service worker. Evita Ctrl + Shift + R: una recarga forzada puede omitir el worker.</span></li><li><strong>Vuelve a “No throttling” al terminar.</strong><span>Las notas permanecen en este navegador. Esta demo no tiene sincronización con un servidor.</span></li></ol></article>
+      <article class="card guide-card"><span class="eyebrow">04 / EXPLICA EL CICLO COMPLETO</span><h3>¿Y cuando cambia el código?</h3><p>Un worker nuevo se instala y normalmente queda en <code>waiting</code> mientras el anterior controla pestañas. Después se activa y el anterior pasa a <code>redundant</code>.</p><p>Esta demo usa <code>skipWaiting()</code> para activar la actualización de inmediato y <code>clients.claim()</code> para controlar la pestaña abierta. Si cambias los archivos, aumenta <code>v1</code> a <code>v2</code> en <code>APP_CACHE</code>.</p><p><code>fetch</code> es un evento que se repite con las peticiones, no un estado de instalación.</p></article>
+      <article class="card guide-card"><span class="eyebrow">PARA CERRAR</span><h3>Lo que acabas de demostrar</h3><p>El manifest define la presentación e instalación. El worker permite servir la página desde caché. Además, intercepta el guardado de notas y almacena su JSON localmente, incluso offline.</p><p>La primera visita necesita conexión al servidor. La caché puede borrarse desde el navegador; no es un respaldo permanente. Usa <code>localhost</code> para la demo; al publicar necesitas HTTPS.</p><p class="sources">Documentación: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers" target="_blank" rel="noreferrer">Service workers ↗</a> · <a href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest" target="_blank" rel="noreferrer">Manifest ↗</a> (requiere conexión)</p></article></div>
+    </section>
+    <noscript>Activa JavaScript para ejecutar esta demostración de service workers.</noscript>
+  </main>
+  <footer><a href="/" class="footer-brand">PWA Lab<span> / Aprende haciendo.</span></a><span>Manifest + Service worker + Cache Storage</span><span>HECHO PARA SEGUIR FUNCIONANDO <span class="status-dot"></span></span></footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "pwa-laboratorio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo sencilla de manifest, service worker y caché offline",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
